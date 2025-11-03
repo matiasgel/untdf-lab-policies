@@ -1,0 +1,23 @@
+{
+  "name": "untdf-lab-policies",
+  "version": "1.0.0",
+  "description": "Políticas de análisis y evaluación para UNTDF Lab",
+  "scripts": {
+    "validate:policies": "node scripts/validate-policies.js",
+    "validate:weights": "node scripts/validate-weights.js",
+    "test": "npm run validate:policies && npm run validate:weights"
+  },
+  "keywords": [
+    "policies",
+    "education",
+    "code-quality",
+    "grading"
+  ],
+  "author": "UNTDF Lab Team",
+  "license": "MIT",
+  "devDependencies": {
+    "ajv": "^8.12.0",
+    "glob": "^10.3.10",
+    "js-yaml": "^4.1.0"
+  }
+}

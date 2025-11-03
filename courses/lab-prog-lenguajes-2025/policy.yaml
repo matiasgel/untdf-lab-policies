@@ -1,0 +1,107 @@
+# Política del curso Laboratorio de Programación y Lenguajes — UNTDF 2025
+# Tercer año — Python, HTML, Django con programación funcional
+# Esta política extiende y sobrescribe la política organizacional
+
+version: "1.0.0"
+
+# Telemetría específica para este curso
+telemetry:
+  level: full  # Telemetría completa para análisis pedagógico
+  retentionDays: 180  # 6 meses para análisis de cohorte
+  excludePatterns:
+    - "**/.env"
+    - "**/.env.*"
+    - "**/secrets.yaml"
+    - "**/venv/**"
+    - "**/__pycache__/**"
+
+# Umbrales ajustados para curso de 3er año (Python + Django + HTML)
+thresholds:
+  coverage: 80  # Alta cobertura requerida (énfasis en testing de vistas y ORM)
+  duplicacion: 4  # Baja tolerancia a duplicación (código funcional debe ser DRY)
+  lintErrorsPerKLOC: 2  # Código muy limpio (3er año)
+  securityFindings:
+    critical: 0
+    high: 0  # Sin hallazgos críticos ni altos (Django security patterns)
+
+# Pesos ajustados: énfasis en calidad y arquitectura funcional
+weights:
+  proceso: 0.15      # Commits, PRs, CI/CD
+  calidad: 0.65      # Lint, coverage, arquitectura funcional, seguridad Django
+  razonamiento: 0.20 # Quiz sobre diseño funcional y patterns Django
+
+# Analizadores específicos para Python/Django/HTML
+analyzers:
+  python:
+    enabled: true
+    tools:
+      - flake8
+      - pylint    # Análisis profundo de código funcional
+      - black     # Formateo consistente
+      - isort     # Ordenamiento de imports
+      - bandit    # Seguridad (OWASP patterns)
+      - radon     # Complejidad ciclomática (debe ser baja en funcional)
+      - mypy      # Type hints (importante en funcional)
+    timeout: 400
+
+  javascript:
+    enabled: false  # No se usa JavaScript en este curso
+
+  html:
+    enabled: true
+    tools:
+      - htmlhint
+      - w3c-validator
+    timeout: 120
+
+# Quiz enfocado en arquitectura funcional y Django
+quiz:
+  enabled: true
+  questionsCount: 5  # Preguntas sobre: funciones puras, ORM queries, vistas funcionales, templates, seguridad
+  dueMinutes: 10
+  assigneeMode: INDIVIDUAL_STUDENTS
+
+# Overrides para asignaciones específicas
+overrides:
+  tp1-fundamentos-python:
+    thresholds:
+      coverage: 70     # Más permisivo en primera tarea
+      lintErrorsPerKLOC: 5
+      duplicacion: 8
+    quiz:
+      questionsCount: 4  # Quiz inicial más corto
+      dueMinutes: 8
+
+  tp2-django-orm-funcional:
+    thresholds:
+      coverage: 85     # Cobertura muy alta para queries ORM
+      duplicacion: 3   # ORM queries deben ser DRY
+    weights:
+      proceso: 0.10
+      calidad: 0.70    # Más peso en calidad del ORM
+      razonamiento: 0.20
+    quiz:
+      questionsCount: 6  # Más preguntas sobre queries complejas
+      dueMinutes: 12
+
+  tp3-vistas-funcionales-django:
+    thresholds:
+      coverage: 85     # Alta cobertura de vistas
+      lintErrorsPerKLOC: 1  # Código muy limpio
+    quiz:
+      questionsCount: 6  # Preguntas sobre composición de vistas, middleware
+      dueMinutes: 12
+
+  tp4-templates-html-seguridad:
+    thresholds:
+      coverage: 75     # Coverage de templates (más difícil)
+      securityFindings:
+        critical: 0
+        high: 0  # Seguridad estricta (XSS, CSRF, SQL injection)
+    weights:
+      proceso: 0.15
+      calidad: 0.70
+      razonamiento: 0.15
+    quiz:
+      questionsCount: 5  # Preguntas sobre seguridad Django
+      dueMinutes: 10

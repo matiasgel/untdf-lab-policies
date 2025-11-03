@@ -1,0 +1,220 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://untdf-lab.edu.ar/schemas/policy.schema.json",
+  "title": "UNTDF Lab Policy Schema",
+  "description": "Schema de validación para políticas de análisis y evaluación del UNTDF Lab",
+  "type": "object",
+  "required": ["version", "telemetry", "thresholds", "weights"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Versión del schema de política (semver)",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "examples": ["1.0.0"]
+    },
+    "telemetry": {
+      "type": "object",
+      "description": "Configuración de telemetría y auditoría",
+      "required": ["level", "retentionDays"],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["minimal", "standard", "full"],
+          "description": "Nivel de telemetría (minimal: solo IDs hasheados, standard: métricas agregadas, full: análisis detallado sin código crudo)"
+        },
+        "retentionDays": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 730,
+          "description": "Días de retención de datos de telemetría (30-730)"
+        },
+        "excludePatterns": {
+          "type": "array",
+          "description": "Patrones glob de archivos a excluir de telemetría",
+          "items": {
+            "type": "string"
+          },
+          "examples": [["**/.env", "**/secrets.yaml"]]
+        }
+      }
+    },
+    "thresholds": {
+      "type": "object",
+      "description": "Umbrales de calidad mínimos",
+      "required": ["coverage", "duplicacion"],
+      "properties": {
+        "coverage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Cobertura de tests mínima requerida (%)"
+        },
+        "duplicacion": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Duplicación de código máxima permitida (%)"
+        },
+        "lintErrorsPerKLOC": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Errores de lint máximos por 1000 líneas de código"
+        },
+        "securityFindings": {
+          "type": "object",
+          "description": "Límites de hallazgos de seguridad por severidad",
+          "properties": {
+            "critical": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Máximo de hallazgos críticos permitidos"
+            },
+            "high": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Máximo de hallazgos de severidad alta permitidos"
+            }
+          }
+        }
+      }
+    },
+    "weights": {
+      "type": "object",
+      "description": "Pesos por criterio en la rúbrica final (deben sumar 1.0)",
+      "required": ["proceso", "calidad", "razonamiento"],
+      "properties": {
+        "proceso": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Peso de criterios de proceso (commits, PRs, CI/CD)"
+        },
+        "calidad": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Peso de criterios de calidad (lint, coverage, duplicación, seguridad)"
+        },
+        "razonamiento": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Peso del micro-quiz de razonamiento"
+        }
+      },
+      "additionalProperties": false
+    },
+    "analyzers": {
+      "type": "object",
+      "description": "Configuración de analizadores estáticos por lenguaje",
+      "properties": {
+        "python": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean", "default": true},
+            "tools": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["flake8", "pylint", "black", "isort", "bandit", "radon", "mypy"]
+              },
+              "default": ["flake8", "black", "bandit"]
+            },
+            "timeout": {
+              "type": "integer",
+              "minimum": 60,
+              "maximum": 600,
+              "description": "Timeout en segundos",
+              "default": 300
+            }
+          }
+        },
+        "javascript": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean", "default": true},
+            "tools": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["eslint", "prettier", "jest", "semgrep"]
+              },
+              "default": ["eslint", "jest"]
+            },
+            "timeout": {
+              "type": "integer",
+              "minimum": 60,
+              "maximum": 600,
+              "description": "Timeout en segundos",
+              "default": 300
+            }
+          }
+        },
+        "html": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean", "default": true},
+            "tools": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["htmlhint", "w3c-validator"]
+              },
+              "default": ["htmlhint", "w3c-validator"]
+            },
+            "timeout": {
+              "type": "integer",
+              "minimum": 60,
+              "maximum": 300,
+              "description": "Timeout en segundos",
+              "default": 120
+            }
+          }
+        }
+      }
+    },
+    "quiz": {
+      "type": "object",
+      "description": "Configuración del micro-quiz de razonamiento",
+      "properties": {
+        "enabled": {"type": "boolean", "default": true},
+        "questionsCount": {
+          "type": "integer",
+          "minimum": 3,
+          "maximum": 10,
+          "description": "Cantidad de preguntas a generar",
+          "default": 5
+        },
+        "dueMinutes": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 30,
+          "description": "Minutos disponibles para completar el quiz",
+          "default": 10
+        },
+        "assigneeMode": {
+          "type": "string",
+          "enum": ["ALL_STUDENTS", "INDIVIDUAL_STUDENTS"],
+          "description": "Modo de asignación en Classroom",
+          "default": "INDIVIDUAL_STUDENTS"
+        }
+      }
+    },
+    "overrides": {
+      "type": "object",
+      "description": "Overrides por asignación específica (opcional)",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "object",
+          "description": "Overrides para assignment_id específico",
+          "properties": {
+            "thresholds": {"$ref": "#/properties/thresholds"},
+            "weights": {"$ref": "#/properties/weights"},
+            "quiz": {"$ref": "#/properties/quiz"}
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

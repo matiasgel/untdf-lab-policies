@@ -1,0 +1,130 @@
+name: Validate Policies
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-schemas:
+    name: Validate JSON Schemas and YAML Policies
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: |
+          npm install -g ajv-cli@5.0.0
+          npm install -g js-yaml@4.1.0
+      
+      - name: Validate JSON Schema syntax
+        run: |
+          echo "Validating policy.schema.json..."
+          ajv compile -s schemas/policy.schema.json --strict=false
+      
+      - name: Validate org policy against schema
+        run: |
+          echo "Validating org/default.yaml..."
+          ajv validate -s schemas/policy.schema.json -d org/default.yaml --spec=draft7
+      
+      - name: Validate course policies against schema
+        run: |
+          echo "Validating course policies..."
+          for policy in courses/*/policy.yaml; do
+            if [ -f "$policy" ]; then
+              echo "Validating $policy"
+              ajv validate -s schemas/policy.schema.json -d "$policy" --spec=draft7
+            fi
+          done
+      
+      - name: Check weights sum to 1.0
+        run: |
+          cat > check_weights.js << 'EOF'
+          const fs = require('fs');
+          const yaml = require('js-yaml');
+          const glob = require('glob');
+
+          function checkWeights(policyPath) {
+            const content = fs.readFileSync(policyPath, 'utf8');
+            const policy = yaml.load(content);
+            
+            const { proceso, calidad, razonamiento } = policy.weights;
+            const sum = proceso + calidad + razonamiento;
+            
+            if (Math.abs(sum - 1.0) > 0.001) {
+              console.error(`❌ ${policyPath}: weights sum to ${sum}, expected 1.0`);
+              console.error(`   proceso: ${proceso}, calidad: ${calidad}, razonamiento: ${razonamiento}`);
+              return false;
+            }
+            
+            console.log(`✅ ${policyPath}: weights sum correctly to ${sum}`);
+            return true;
+          }
+
+          // Check org policy
+          let allValid = checkWeights('org/default.yaml');
+
+          // Check course policies
+          const coursePolicies = glob.sync('courses/*/policy.yaml');
+          for (const policyPath of coursePolicies) {
+            if (!checkWeights(policyPath)) {
+              allValid = false;
+            }
+          }
+
+          if (!allValid) {
+            process.exit(1);
+          }
+          EOF
+          
+          npm install glob js-yaml
+          node check_weights.js
+      
+      - name: Validate YAML syntax
+        run: |
+          cat > validate_yaml.js << 'EOF'
+          const fs = require('fs');
+          const yaml = require('js-yaml');
+          const glob = require('glob');
+
+          let hasErrors = false;
+
+          const yamlFiles = glob.sync('{org,courses/**}/*.yaml');
+          
+          for (const file of yamlFiles) {
+            try {
+              const content = fs.readFileSync(file, 'utf8');
+              yaml.load(content);
+              console.log(`✅ ${file}: valid YAML`);
+            } catch (e) {
+              console.error(`❌ ${file}: ${e.message}`);
+              hasErrors = true;
+            }
+          }
+
+          if (hasErrors) {
+            process.exit(1);
+          }
+          EOF
+          
+          node validate_yaml.js
+      
+      - name: Summary
+        if: success()
+        run: |
+          echo "✅ All policies validated successfully!"
+          echo ""
+          echo "Validated files:"
+          echo "- JSON Schema: schemas/policy.schema.json"
+          echo "- Org policy: org/default.yaml"
+          echo "- Course policies:"
+          find courses -name "policy.yaml" -type f | sed 's/^/  - /'

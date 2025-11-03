@@ -1,0 +1,70 @@
+# Política organizacional por defecto — UNTDF Lab
+# Esta política se aplica a todos los cursos que no definan su propia política
+
+version: "1.0.0"
+
+# Telemetría y auditoría
+telemetry:
+  level: standard  # minimal | standard | full
+  retentionDays: 90
+  excludePatterns:
+    - "**/.env"
+    - "**/.env.*"
+    - "**/secrets.yaml"
+    - "**/credentials.json"
+    - "**/*.pem"
+    - "**/*.key"
+
+# Umbrales de calidad mínimos
+thresholds:
+  coverage: 70  # Cobertura de tests mínima (%)
+  duplicacion: 10  # Duplicación máxima permitida (%)
+  lintErrorsPerKLOC: 5  # Errores de lint por 1000 líneas
+  securityFindings:
+    critical: 0  # Sin hallazgos críticos
+    high: 2  # Máximo 2 hallazgos de severidad alta
+
+# Pesos en rúbrica (deben sumar 1.0)
+weights:
+  proceso: 0.15      # Commits, PRs, CI/CD
+  calidad: 0.65      # Lint, coverage, duplicación, seguridad
+  razonamiento: 0.20 # Micro-quiz de razonamiento
+
+# Configuración de analizadores
+analyzers:
+  python:
+    enabled: true
+    tools:
+      - flake8
+      - black
+      - bandit
+      - radon
+    timeout: 300  # 5 minutos
+
+  javascript:
+    enabled: true
+    tools:
+      - eslint
+      - jest
+      - semgrep
+    timeout: 300
+
+  html:
+    enabled: true
+    tools:
+      - htmlhint
+      - w3c-validator
+    timeout: 120
+
+# Configuración de micro-quiz
+quiz:
+  enabled: true
+  questionsCount: 5
+  dueMinutes: 10
+  assigneeMode: INDIVIDUAL_STUDENTS
+
+# Overrides por asignación (opcional)
+# overrides:
+#   assignment-01:
+#     thresholds:
+#       coverage: 50  # Más permisivo para primera asignación

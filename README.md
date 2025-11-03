@@ -21,8 +21,8 @@ untdf-lab-policies/
 ├── org/
 │   └── default.yaml            # Política organizacional (base)
 ├── courses/
-│   ├── paradigmas-2025/
-│   │   └── policy.yaml         # Política del curso Paradigmas
+│   ├── lab-prog-lenguajes-2025/
+│   │   └── policy.yaml         # Lab Programación y Lenguajes (curso piloto)
 │   └── ...                     # Otros cursos
 └── docs/
     ├── policy-resolution.md    # Algoritmo de resolución

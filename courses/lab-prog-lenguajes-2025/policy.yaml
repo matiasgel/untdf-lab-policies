@@ -88,6 +88,7 @@ overrides:
   tp3-class-based-views-django:
     thresholds:
       coverage: 85     # Alta cobertura de views (CBV)
+      duplicacion: 3   # CBV reutilizables con mixins, no duplicar lógica
       lintErrorsPerKLOC: 1  # Código muy limpio
     quiz:
       questionsCount: 6  # Preguntas sobre CBV, mixins, herencia de views
@@ -96,6 +97,7 @@ overrides:
   tp4-templates-html-seguridad:
     thresholds:
       coverage: 75     # Coverage de templates (más difícil)
+      duplicacion: 5   # Templates pueden tener cierta repetición (includes/partials)
       securityFindings:
         critical: 0
         high: 0  # Seguridad estricta (XSS, CSRF, SQL injection)
